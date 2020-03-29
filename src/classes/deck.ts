@@ -1,7 +1,4 @@
-// import { cards } from '../cards/cards';
-import cities from '../cards/cities.json';
-import epidemics from '../cards/epidemics.json';
-import events from '../cards/events.json';
+import { allCards } from '../cards/cards';
 
 interface InterfaceCard {
   readonly card_type: string,
@@ -14,18 +11,8 @@ export class Deck {
   cards: InterfaceDeck;
 
   constructor() {
-    this.cards = this.initCards();
-    // console.log('cities', cities);
-    // for (card in cities) {
-    //   console.log('obj', card);
-    // }
+    this.cards = allCards;
   }
 
-  initCards() {
-    let bleh: Array<InterfaceCard> = [];
-    epidemics.forEach(c => bleh.push(c))
-    cities.forEach(c => bleh.push(c))
-    events.forEach(c => bleh.push(c))
-    return bleh;
-  }
+  selectEventCards() { }
 }
