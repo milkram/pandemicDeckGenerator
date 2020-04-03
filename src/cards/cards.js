@@ -3,19 +3,30 @@ import epidemics from './data/epidemics.json';
 import events from './data/events.json'; // to-do: dynamically load all json from the ./data/ folder versus one by one
 import Card from '../classes/card';
 
-const fetchAllCards = () => {
+const populateDeck = (type) => { // type can be 'PLAYER' or 'INFECTION'
   function constructCard({ card_type, name }) {
     cards.push(new Card({ card_type, name: name ? name : undefined }));
   }
 
   const cards = [];
-  cities.forEach(cardData => constructCard(cardData));
-  epidemics.forEach(cardData => constructCard(cardData));
-  events.forEach(cardData => constructCard(cardData));
+  switch (type) {
+    case 'INFECTION': {
+      cities.forEach(cardData => constructCard(cardData));
+      break;
+    }
+    case 'PLAYER':
+    default: {
+      cities.forEach(cardData => constructCard(cardData));
+      epidemics.forEach(cardData => constructCard(cardData));
+      events.forEach(cardData => constructCard(cardData));
+      break;
+    }
+  }
+
   return cards;
 }
 
 export const cityCards = cities;
 export const epidemicCards = epidemics;
 export const eventCards = events;
-export const allCards = fetchAllCards();
+export const createDeck = populateDeck;

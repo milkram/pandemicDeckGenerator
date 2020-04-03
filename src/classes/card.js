@@ -3,8 +3,4 @@ export default class Card {
     this.card_type = card_type;
     if (name) this.name = name;
   }
-
-  hello() {
-    console.log('hello');
-  }
 }
