@@ -11,7 +11,15 @@ export default class Game {
   createNumberOfPlayers(numberOfPlayers) {
     const groupingOfPlayers = [];
     for (let x = 0; x < numberOfPlayers; x++) {
-      groupingOfPlayers.push(new Player(x));
+      groupingOfPlayers.push(new Player(
+        {
+          position: x,
+          onDrawCard: (player) => this.onPlayerDrawCard(player),
+          onDiscardCard: (player) => this.onPlayerDiscardCard(player),
+          onRemoveCardFromGame: (player) => this.onPlayerRemoveCardFromGame(player),
+          onTransferCardToTargetPlayer: (player) => this.onPlayerTransferCardToTargetPlayer(player),
+        }
+      ));
     }
     return groupingOfPlayers;
   }
@@ -51,5 +59,42 @@ export default class Game {
       console.log(`** It is ${this.getCurrentPlayersTurn().name}'s turn **`);
       console.log('');
     }
+  }
+
+  // card drawing
+  onPlayerDrawCard({ player }) {
+    // console.log('game.drawCard()', player);
+  }
+
+  onPlayerDiscardCard({ player, card: cardToDiscard }) {
+    // console.log("player's hand before", player.hand);
+
+    this.decks.player.cards.discard.push(cardToDiscard);
+    player.hand = player.hand.filter(card => card.name !== cardToDiscard.name); // use mutable .splice() instead?
+
+    // console.log("player's hand after", player.hand);
+    // console.log("this.decks.player.cards.discard", this.decks.player.cards.discard);
+  }
+
+  onPlayerRemoveCardFromGame({ player, card: cardToRemoveFromGame }) {
+    // console.log("onPlayerRemoveCardFromGame: player's hand before", player.hand);
+
+    this.decks.player.cards.removed.push(cardToRemoveFromGame);
+    player.hand = player.hand.filter(card => card.name !== cardToRemoveFromGame.name); // use mutable .splice() instead?
+
+    // console.log("onPlayerRemoveCardFromGame: player's hand after", player.hand);
+    // console.log("onPlayerRemoveCardFromGame: this.decks.player.cards.removed", this.decks.player.cards.removed);
+  }
+
+  onPlayerTransferCardToTargetPlayer({ currentPlayer, targetPlayerIdx, card: cardToTrade }) {
+    // console.log("onPlayerTransferCardToTargetPlayer: current player's hand before", currentPlayer.hand);
+    // console.log("onPlayerTransferCardToTargetPlayer: target player's hand before", this.players[targetPlayerIdx].hand);
+    // console.log("onPlayerTransferCardToTargetPlayer: card being transfered", cardToTrade);
+
+    this.players[targetPlayerIdx].hand.push(cardToTrade);
+    currentPlayer.hand = currentPlayer.hand.filter(card => card.name !== cardToTrade.name);
+
+    // console.log("onPlayerTransferCardToTargetPlayer: current player's hand after", currentPlayer.hand);
+    // console.log("onPlayerTransferCardToTargetPlayer: target player's hand after", this.players[targetPlayerIdx].hand);
   }
 }

@@ -30,3 +30,22 @@ by milkram
 // not current player:
 // - play an event card (discards it)
 // - transfer card to another player
+
+---
+// player: discarding a card
+//   any player:
+//   game.players[2].discardCard({ cardIdx: 1 }));
+//   current player:
+//   game.getCurrentPlayersTurn().discardCard({ cardIdx: 1 });
+
+// player: removing a card from game
+//   any player:
+//   game.players[2].removeCardFromGame({ cardIdx: 1 }));
+//   current player:
+//   game.getCurrentPlayersTurn().removeCardFromGame({ cardIdx: 1 });
+
+// player: transfering a card to another player
+//   any player:
+//   game.players[0].transferCardToTargetPlayer({ targetPlayerIdx: 1, cardIdx: 1 });
+//   current player:
+//   game.getCurrentPlayersTurn().transferCardToTargetPlayer({ targetPlayerIdx: 1, cardIdx: 1 });
