@@ -6,6 +6,7 @@ export default class Game {
     this.logging = logging;
     this.decks = []; // array of objects {}
     this.players = this.createNumberOfPlayers(players);
+    this.infectRate = [2,2,2,3,3,4,4]; // front is the current infectRate
   }
 
   createNumberOfPlayers(numberOfPlayers) {
@@ -32,6 +33,7 @@ export default class Game {
       for (let x = 0; x < this.players.length; x++) {
         console.log(`- ${this.players[x].name}`);
       }
+      console.log('');
     }
     this.decks = {
       player: new Deck({ type: 'PLAYER', logging: this.logging }),
@@ -50,25 +52,39 @@ export default class Game {
 
   startGame() {
     // prepares the player deck for a new game by distributing cards to new players
+    if (this.logging) console.log('---- START PREGAME STEPS ----');
     this.decks.player.prepareCardsForNewGame({ players: this.players });
     this.decks.infection.prepareCardsForNewGame();
     this.randomlySelectCurrentPlayersTurn();
     if (this.logging) {
+      console.log('---- END PREGAME STEPS ----');
       console.log('---- GAME START ----');
       console.log('');
-      console.log(`** It is ${this.getCurrentPlayersTurn().name}'s turn **`);
+      console.log(`** ${this.getCurrentPlayersTurn().name}'s turn **`);
       console.log('');
     }
   }
 
   // card drawing
   onPlayerDrawCard({ player }) {
-    // console.log('game.drawCard()', player);
+    // console.log('onPlayerDrawCard(): the draw pile from player deck before', this.decks.player.cards.draw);
+    // console.log("onPlayerDrawCard(): player's hand before", player.hand);
+
+    if (this.logging) console.log(`${player.name} draws a card`);
+
+    const card = this.decks.player.cards.draw.shift();
+    if (card.card_type === 'epidemic') this.onEpidemicDrawn();
+    else player.hand.push(card);
+
+    // console.log('onPlayerDrawCard(): the card being drawn', card);
+    // console.log('onPlayerDrawCard(): the draw pile from player deck after', this.decks.player.cards.draw);
+    // console.log("onPlayerDrawCard(): player's hand after", player.hand);
   }
 
   onPlayerDiscardCard({ player, card: cardToDiscard }) {
     // console.log("player's hand before", player.hand);
 
+    if (this.logging) console.log(`${player.name} plays ${cardToDiscard.name}`);
     this.decks.player.cards.discard.push(cardToDiscard);
     player.hand = player.hand.filter(card => card.name !== cardToDiscard.name); // use mutable .splice() instead?
 
@@ -79,6 +95,7 @@ export default class Game {
   onPlayerRemoveCardFromGame({ player, card: cardToRemoveFromGame }) {
     // console.log("onPlayerRemoveCardFromGame: player's hand before", player.hand);
 
+    if (this.logging) console.log(`${player.name} removes ${cardToRemoveFromGame.name} from the game`);
     this.decks.player.cards.removed.push(cardToRemoveFromGame);
     player.hand = player.hand.filter(card => card.name !== cardToRemoveFromGame.name); // use mutable .splice() instead?
 
@@ -91,10 +108,37 @@ export default class Game {
     // console.log("onPlayerTransferCardToTargetPlayer: target player's hand before", this.players[targetPlayerIdx].hand);
     // console.log("onPlayerTransferCardToTargetPlayer: card being transfered", cardToTrade);
 
-    this.players[targetPlayerIdx].hand.push(cardToTrade);
+    const targetPlayer = this.players[targetPlayerIdx];
+    if (this.logging) console.log(`${player.name} transfers ${cardToTrade.name} to ${targetPlayer}`);
+    targetPlayer.hand.push(cardToTrade);
     currentPlayer.hand = currentPlayer.hand.filter(card => card.name !== cardToTrade.name);
 
     // console.log("onPlayerTransferCardToTargetPlayer: current player's hand after", currentPlayer.hand);
     // console.log("onPlayerTransferCardToTargetPlayer: target player's hand after", this.players[targetPlayerIdx].hand);
+  }
+
+  // events
+  onEpidemicDrawn() {
+    // when an epidemic is drawn:
+    // - draw the bottom card from the infect pile, infect city with 3 cubes
+    const cityCardFromBottomOfDeck = this.decks.infection.cards.draw.pop();
+    this.decks.infection.cards.discard.push(cityCardFromBottomOfDeck);
+
+    if (this.logging) {
+      console.log('---- EPIDEMIC HAS BEEN DRAWN ----');
+      console.log(`** Infect the following cities with 3 disease cubes: **`);
+      console.log(cityCardFromBottomOfDeck);
+      console.log('');
+    }
+
+    // - shuffle the discard pile
+    // console.log('before this.decks.infection.cards.discard', this.decks.infection.cards.discard);
+    this.decks.infection.shuffleCards(this.decks.infection.cards.discard); // modify this function to live on game
+    // console.log('after this.decks.infection.cards.discard', this.decks.infection.cards.discard);
+
+    // - place shuffled discard pile onto the top of the draw pile
+    // console.log('this.decks.infection.cards.draw before', this.decks.infection.cards.draw);
+    this.decks.infection.cards.draw = [...this.decks.infection.cards.discard, ...this.decks.infection.cards.draw];
+    // console.log('this.decks.infection.cards.draw after', this.decks.infection.cards.draw);
   }
 }

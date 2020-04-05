@@ -32,6 +32,16 @@ by milkram
 // - transfer card to another player
 
 ---
+// starting a new game:
+//   game.newGame();
+//   game.startGame();
+
+// player: drawing a card
+//   any player:
+//   game.players[2].drawCard();
+//   current player:
+//   game.getCurrentPlayersTurn().drawCard();
+
 // player: discarding a card
 //   any player:
 //   game.players[2].discardCard({ cardIdx: 1 }));

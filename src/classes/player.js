@@ -34,6 +34,6 @@ export default class Player {
     if (targetPlayerIdx === this.position) console.log('--- Card transfer cancelled: CANNOT TRANSFER TO SELF --- ');
 
     const card = this.hand[cardIdx];
-    this.onTransferCardToTargetPlayer({ currentPlayer: this, targetPlayerIdx, card })
+    this.onTransferCardToTargetPlayer({ currentPlayer: this, targetPlayerIdx, card });
   }
 }

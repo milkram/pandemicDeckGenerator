@@ -23,8 +23,6 @@ export default class Deck {
     // combine cards + sponsored events together, shuffle them
     // give players X cards
 
-    if (this.logging) console.log('---- START DISTRIBUTE CARDS ----');
-
     // shuffle cards + sponsored events into the player deck
     const cardsSeparatedByCardType = this.cards.pregame.reduce((acc, card) => {
       if (card.card_type === 'city' || card.card_type === 'sponsored_event') acc.push(card);
@@ -64,6 +62,7 @@ export default class Deck {
         }, '');
         console.log(`${players[y].name} has ${handToString}`);
       }
+      console.log('');
     }
 
     // separate into 5 piles
@@ -89,15 +88,11 @@ export default class Deck {
 
     this.cards.pregame = [];
     this.cards.draw = piles.flat();
-
-    if (this.logging) console.log('---- END DISTRIBUTE CARDS ----');
   }
 
   prepareInfectionDeck() {
     // draw 9 cards into the discard pile
     this.shuffleCards(this.cards.pregame);
-
-    if (this.logging) console.log('---- START PREGAME INFECT STEP ----');
 
     // infect 3 cities with 3 cubes, 3x2, 3x1
     for (let x = 0; x < 3; x++) {
@@ -110,14 +105,13 @@ export default class Deck {
         console.log(this.cards.discard[this.cards.discard.length - 1]);
         console.log(this.cards.discard[this.cards.discard.length - 2]);
         console.log(this.cards.discard[this.cards.discard.length - 3]);
+        console.log('');
       }
     }
 
     // move remaining cards into draw pile
     this.cards.draw = this.cards.pregame;
     this.cards.pregame = [];
-
-    if (this.logging) console.log('---- END PREGAME INFECT STEP ----');
   }
 
   shuffleCards(pile) { // 'draw' | 'discard' | 'removed' | 'all' | Array
