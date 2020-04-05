@@ -2,8 +2,9 @@ import { createDeck } from '../cards/cards';
 import { chunkArray } from '../lib/chunkArray.js';
 
 export default class Deck {
-  constructor(type) {
+  constructor({ type, logging }) {
     this.type = type; // INFECTION, PLAYER
+    this.logging = logging;
     this.cards = {
       draw: [],
       discard: [],
@@ -21,6 +22,8 @@ export default class Deck {
     // 48 cards + X sponsored events in the player deck
     // combine cards + sponsored events together, shuffle them
     // give players X cards
+
+    if (this.logging) console.log('---- START DISTRIBUTE CARDS ----');
 
     // shuffle cards + sponsored events into the player deck
     const cardsSeparatedByCardType = this.cards.pregame.reduce((acc, card) => {
@@ -53,6 +56,16 @@ export default class Deck {
       }
     }
 
+    if (this.logging) {
+      for (let y = 0; y < players.length; y++) {
+        const handToString = players[y].hand.reduce((string, value, idx) => {
+          const addString = (players[y].hand.length-1) === idx ? value.name : `${value.name}, `
+          return string + addString;
+        }, '');
+        console.log(`${players[y].name} has ${handToString}`);
+      }
+    }
+
     // separate into 5 piles
     const totalPilesDesired = 5;
     const roundedDownNumberOfCardsPerPile = Math.floor(cardsSeparatedByCardType.length / totalPilesDesired);
@@ -76,10 +89,35 @@ export default class Deck {
 
     this.cards.pregame = [];
     this.cards.draw = piles.flat();
+
+    if (this.logging) console.log('---- END DISTRIBUTE CARDS ----');
   }
 
   prepareInfectionDeck() {
-    console.log('prepareInfectionDeck');
+    // draw 9 cards into the discard pile
+    this.shuffleCards(this.cards.pregame);
+
+    if (this.logging) console.log('---- START PREGAME INFECT STEP ----');
+
+    // infect 3 cities with 3 cubes, 3x2, 3x1
+    for (let x = 0; x < 3; x++) {
+      this.cards.discard.push(this.cards.pregame.shift());
+      this.cards.discard.push(this.cards.pregame.shift());
+      this.cards.discard.push(this.cards.pregame.shift());
+
+      if (this.logging) {
+        console.log(`** Infect the following cities with ${3-x} disease cubes: **`);
+        console.log(this.cards.discard[this.cards.discard.length - 1]);
+        console.log(this.cards.discard[this.cards.discard.length - 2]);
+        console.log(this.cards.discard[this.cards.discard.length - 3]);
+      }
+    }
+
+    // move remaining cards into draw pile
+    this.cards.draw = this.cards.pregame;
+    this.cards.pregame = [];
+
+    if (this.logging) console.log('---- END PREGAME INFECT STEP ----');
   }
 
   shuffleCards(pile) { // 'draw' | 'discard' | 'removed' | 'all' | Array

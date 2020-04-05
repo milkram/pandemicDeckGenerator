@@ -1,4 +1,4 @@
 import Game from './classes/game';
-const game = new Game({ players: 4 });
+const game = new Game({ players: 4, logging: true });
 game.newGame();
-console.log('game', game);
+game.startGame();
