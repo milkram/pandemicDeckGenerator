@@ -4,8 +4,8 @@ import events from './data/events.json'; // to-do: dynamically load all json fro
 import Card from '../classes/card';
 
 const populateDeck = (type) => { // type can be 'PLAYER' or 'INFECTION'
-  function constructCard({ card_type, name }) {
-    cards.push(new Card({ card_type, name: name ? name : undefined }));
+  function constructCard({ card_type, name, color }) {
+    cards.push(new Card({ card_type, name: name ? name : undefined, color: color ? color : undefined }));
   }
 
   const cards = [];

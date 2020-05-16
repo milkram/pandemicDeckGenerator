@@ -1,12 +1,14 @@
 export default class Player {
   constructor({
+    name,
     position,
     onDrawCard,
     onDiscardCard,
     onRemoveCardFromGame,
     onTransferCardToTargetPlayer,
+    onEndTurn,
   }) {
-    this.name = `PLAYER_${position+1}`;
+    this.name = name ? name : `PLAYER_${position+1}`;
     this.position = position;
     this.hand = [];
     this.isPlayersTurn = false;
@@ -14,15 +16,23 @@ export default class Player {
     this.onDiscardCard = onDiscardCard;
     this.onRemoveCardFromGame = onRemoveCardFromGame;
     this.onTransferCardToTargetPlayer = onTransferCardToTargetPlayer;
+    this.onEndTurn = onEndTurn;
   }
 
-  drawCard() {
-    this.onDrawCard({ player: this });
+  drawCard(numberOfCards = 1) {
+    this.onDrawCard({ player: this, numberOfCards });
   }
 
-  discardCard({ cardIdx }) {
-    const card = this.hand[cardIdx];
-    this.onDiscardCard({ player: this, card });
+  discardCard(cardIdxOrName) {
+    if (typeof cardIdxOrName === 'string' || cardIdxOrName instanceof String) {
+      const card = this.hand.find(card => card.name === cardIdxOrName);
+      if (card) this.onDiscardCard({ player: this, card });
+      else console.log(`Cannot find card: ${cardIdxOrName}`.red);
+    } else if (Number.isInteger(cardIdxOrName)) {
+      const card = this.hand[cardIdxOrName];
+      if (card) this.onDiscardCard({ player: this, card });
+      else console.log(`Cannot find card at ${cardIdxOrName}`.red);
+    }
   }
 
   removeCardFromGame({ cardIdx }) {
@@ -35,5 +45,14 @@ export default class Player {
 
     const card = this.hand[cardIdx];
     this.onTransferCardToTargetPlayer({ currentPlayer: this, targetPlayerIdx, card });
+  }
+
+  endTurn() {
+    this.onEndTurn({ player: this });
+  }
+
+  // aliases
+  discard(cardIdxOrName) {
+    this.discardCard(cardIdxOrName);
   }
 }

@@ -1,9 +1,10 @@
 {
-  "name": "pandemic2",
+  "name": "pandemic",
   "version": "1.0.0",
   "description": "",
   "main": "src/main.js",
   "scripts": {
+    "build": "rm -rf dist; babel src -d dist --copy-files",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon --exec babel-node src/main.js"
   },
@@ -11,9 +12,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "@babel/node": "^7.8.7",
     "@babel/preset-env": "^7.9.0",
     "nodemon": "^2.0.2"
+  },
+  "dependencies": {
+    "colors": "^1.4.0"
   }
 }

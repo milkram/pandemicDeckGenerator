@@ -1,3 +1,4 @@
+const colors = require('colors');
 import Deck from './deck';
 import Player from './player';
 
@@ -5,24 +6,8 @@ export default class Game {
   constructor({ players, logging }) {
     this.logging = logging;
     this.decks = []; // array of objects {}
-    this.players = this.createNumberOfPlayers(players);
+    this.players = this._createNumberOfPlayers(players);
     this.infectRate = [2,2,2,3,3,4,4]; // front is the current infectRate
-  }
-
-  createNumberOfPlayers(numberOfPlayers) {
-    const groupingOfPlayers = [];
-    for (let x = 0; x < numberOfPlayers; x++) {
-      groupingOfPlayers.push(new Player(
-        {
-          position: x,
-          onDrawCard: (player) => this.onPlayerDrawCard(player),
-          onDiscardCard: (player) => this.onPlayerDiscardCard(player),
-          onRemoveCardFromGame: (player) => this.onPlayerRemoveCardFromGame(player),
-          onTransferCardToTargetPlayer: (player) => this.onPlayerTransferCardToTargetPlayer(player),
-        }
-      ));
-    }
-    return groupingOfPlayers;
   }
 
   newGame() {
@@ -39,6 +24,33 @@ export default class Game {
       player: new Deck({ type: 'PLAYER', logging: this.logging }),
       infection: new Deck({ type: 'INFECTION', logging: this.logging }),
     };
+  }
+
+  // private
+  _createNumberOfPlayers(numberOfPlayersOrNames) {
+    const groupingOfPlayers = [];
+    let num = 0;
+    let names = [];
+    if (Array.isArray(numberOfPlayersOrNames)) {
+      num = numberOfPlayersOrNames.length;
+      names = numberOfPlayersOrNames;
+    }
+    else num = numberOfPlayersOrNames;
+
+    for (let x = 0; x < num; x++) {
+      groupingOfPlayers.push(new Player(
+        {
+          name: names.length > 0 ? names[x] : undefined,
+          position: x,
+          onDrawCard: ({ player, numberOfCards }) => this.onPlayerDrawCard({ player, numberOfCards }),
+          onDiscardCard: (player) => this.onPlayerDiscardCard(player),
+          onRemoveCardFromGame: (player) => this.onPlayerRemoveCardFromGame(player),
+          onTransferCardToTargetPlayer: (player) => this.onPlayerTransferCardToTargetPlayer(player),
+          onEndTurn: (player) => this.onPlayerEndTurn(player),
+        }
+      ));
+    }
+    return groupingOfPlayers;
   }
 
   randomlySelectCurrentPlayersTurn() {
@@ -66,15 +78,19 @@ export default class Game {
   }
 
   // card drawing
-  onPlayerDrawCard({ player }) {
+  onPlayerDrawCard({ player, numberOfCards = 1 }) {
     // console.log('onPlayerDrawCard(): the draw pile from player deck before', this.decks.player.cards.draw);
     // console.log("onPlayerDrawCard(): player's hand before", player.hand);
 
-    if (this.logging) console.log(`${player.name} draws a card`);
+    for (let x = 0; x < numberOfCards; x++) {
+      if (this.logging) console.log(`${player.name} draws a card`.green);
 
-    const card = this.decks.player.cards.draw.shift();
-    if (card.card_type === 'epidemic') this.onEpidemicDrawn();
-    else player.hand.push(card);
+      const card = this.decks.player.cards.draw.shift();
+      if (card.card_type === 'epidemic') this.onEpidemicDrawn();
+      else player.hand.push(card);
+
+      if (this.logging) this.reportPlayerCards();
+    }
 
     // console.log('onPlayerDrawCard(): the card being drawn', card);
     // console.log('onPlayerDrawCard(): the draw pile from player deck after', this.decks.player.cards.draw);
@@ -84,7 +100,7 @@ export default class Game {
   onPlayerDiscardCard({ player, card: cardToDiscard }) {
     // console.log("player's hand before", player.hand);
 
-    if (this.logging) console.log(`${player.name} plays ${cardToDiscard.name}`);
+    if (this.logging) console.log(`${player.name} plays ` + `${cardToDiscard.name}`[cardToDiscard.color]);
     this.decks.player.cards.discard.push(cardToDiscard);
     player.hand = player.hand.filter(card => card.name !== cardToDiscard.name); // use mutable .splice() instead?
 
@@ -109,7 +125,7 @@ export default class Game {
     // console.log("onPlayerTransferCardToTargetPlayer: card being transfered", cardToTrade);
 
     const targetPlayer = this.players[targetPlayerIdx];
-    if (this.logging) console.log(`${player.name} transfers ${cardToTrade.name} to ${targetPlayer}`);
+    if (this.logging) console.log(`${currentPlayer.name} transfers ${cardToTrade.name} to ${targetPlayer.name}`);
     targetPlayer.hand.push(cardToTrade);
     currentPlayer.hand = currentPlayer.hand.filter(card => card.name !== cardToTrade.name);
 
@@ -117,7 +133,38 @@ export default class Game {
     // console.log("onPlayerTransferCardToTargetPlayer: target player's hand after", this.players[targetPlayerIdx].hand);
   }
 
+  onPlayerEndTurn({ player }) {
+    player.isPlayersTurn = false;
+    if (this.logging) console.log(`${player.name} ends their turn`);
+
+    const nextPlayerIdx = player.position + 1;
+    if (nextPlayerIdx > (this.players.length-1)) {
+      this.players[0].isPlayersTurn = true;
+      if (this.logging) console.log(`it is ${this.players[0].name}'s turn`);
+    } else {
+      this.players[nextPlayerIdx].isPlayersTurn = true;
+      if (this.logging) console.log(`it is ${this.players[nextPlayerIdx].name}'s turn`.green);
+    }
+  }
+
   // events
+  infectCities() {
+    if (this.logging) {
+      console.log('---- INFECT CITIES ----'.green);
+      console.log(`** Infect the following cities with 1 disease cube: **`);
+    }
+    const infectCardsToDraw = this.infectRate[0];
+    for (let x = 0; x < infectCardsToDraw; x++) {
+      const infectionCard = this.decks.infection.cards.draw.shift();
+      this.decks.infection.cards.discard.push(infectionCard);
+      if (this.logging) console.log(`${infectionCard.name}`[infectionCard.color]);
+    }
+  }
+
+  increaseInfectRate() {
+    this.infectRate.shift();
+  }
+
   onEpidemicDrawn() {
     // when an epidemic is drawn:
     // - draw the bottom card from the infect pile, infect city with 3 cubes
@@ -137,8 +184,72 @@ export default class Game {
     // console.log('after this.decks.infection.cards.discard', this.decks.infection.cards.discard);
 
     // - place shuffled discard pile onto the top of the draw pile
-    // console.log('this.decks.infection.cards.draw before', this.decks.infection.cards.draw);
+    // console.log('this.decks.infection.cards.draw before', this.decks.infection.cards);
     this.decks.infection.cards.draw = [...this.decks.infection.cards.discard, ...this.decks.infection.cards.draw];
-    // console.log('this.decks.infection.cards.draw after', this.decks.infection.cards.draw);
+
+    // - empty out the discard pile
+    this.decks.infection.cards.discard = [];
+    // console.log('this.decks.infection.cards.draw after', this.decks.infection.cards);
+  }
+
+  // logging
+  reportPlayerCards() {
+    if (this.logging) {
+      for (let y = 0; y < this.players.length; y++) {
+        if (this.players[y].hand.length === 0){
+          console.log(`${this.players[y].name} has no cards`);
+        } else {
+          const handToString = this.players[y].hand.reduce((string, value, idx) => {
+            const addString = (this.players[y].hand.length-1) === idx ? `${value.name}`[value.color] : `${value.name}`[value.color] + `, `
+            return string + addString;
+          }, '');
+          console.log(`${this.players[y].name} has ${handToString}`);
+        }
+      }
+    }
+  }
+
+  // aliases
+  report() {
+    this.reportPlayerCards();
+  }
+
+  infect() {
+    this.infectCities();
+  }
+
+  end() {
+    this.players.find(player => player.isPlayersTurn).endTurn();
+  }
+
+  endAll() {
+    this.draw(2);
+    this.infect();
+    this.players.find(player => player.isPlayersTurn).endTurn();
+  }
+
+  player(name = undefined) {
+    if (name) {
+      const player = this.players.find(player => player.name === name);
+      if (player) return player;
+      if (this.logging) console.log(`Cannot find player ${name}`.red)
+      return undefined;
+    }
+    return this.players.find(player => player.isPlayersTurn);
+  }
+
+  draw(numberOfCards = 1, name = undefined) {
+    // draws card for the current player
+    if (name) {
+      const player = this.players.find(player => player.name === name);
+      if (player) {
+        player.drawCard(numberOfCards);
+      } else {
+        if (this.logging) console.log(`Cannot find player ${name}`);
+      }
+    } else {
+      const player = this.players.find(player => player.isPlayersTurn)
+      player.drawCard(numberOfCards);
+    }
   }
 }

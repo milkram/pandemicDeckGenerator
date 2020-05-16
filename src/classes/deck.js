@@ -1,6 +1,20 @@
 import { createDeck } from '../cards/cards';
 import { chunkArray } from '../lib/chunkArray.js';
 
+// polyfill for Array.flat()
+if (!Array.prototype.flat) {
+  Object.defineProperty(Array.prototype, 'flat', {
+    value: function(depth = 1, stack = []) {
+      for (let item of this) {
+        if (item instanceof Array && depth > 0) {
+          item.flat(depth - 1, stack);
+        } else stack.push(item);
+      }
+      return stack;
+    }
+  });
+}
+
 export default class Deck {
   constructor({ type, logging }) {
     this.type = type; // INFECTION, PLAYER
@@ -13,6 +27,25 @@ export default class Deck {
     };
   }
 
+  shuffleCards(pile) { // 'draw' | 'discard' | 'removed' | 'all' | Array
+    let array;
+    if (typeof pile === 'string') array = this.cards[pile];
+    else if (Array.isArray(pile)) array = pile;
+
+    // How to randomize (shuffle) a JavaScript array? - https://stackoverflow.com/a/2450976
+    var currentIndex = array.length, temporaryValue, randomIndex;
+    while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+
+    if (Array.isArray(pile)) return array;
+  }
+
+  // private methods
   prepareCardsForNewGame(opts) {
     if (this.type === 'INFECTION') this.prepareInfectionDeck();
     else if (this.type === 'PLAYER') this.preparePlayerDeck(opts.players);
@@ -57,7 +90,7 @@ export default class Deck {
     if (this.logging) {
       for (let y = 0; y < players.length; y++) {
         const handToString = players[y].hand.reduce((string, value, idx) => {
-          const addString = (players[y].hand.length-1) === idx ? value.name : `${value.name}, `
+          const addString = (players[y].hand.length-1) === idx ? `${value.name} (${value.color})` : `${value.name} (${value.color}), `
           return string + addString;
         }, '');
         console.log(`${players[y].name} has ${handToString}`);
@@ -112,23 +145,5 @@ export default class Deck {
     // move remaining cards into draw pile
     this.cards.draw = this.cards.pregame;
     this.cards.pregame = [];
-  }
-
-  shuffleCards(pile) { // 'draw' | 'discard' | 'removed' | 'all' | Array
-    let array;
-    if (typeof pile === 'string') array = this.cards[pile];
-    else if (Array.isArray(pile)) array = pile;
-
-    // How to randomize (shuffle) a JavaScript array? - https://stackoverflow.com/a/2450976
-    var currentIndex = array.length, temporaryValue, randomIndex;
-    while (0 !== currentIndex) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex -= 1;
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
-    }
-
-    if (Array.isArray(pile)) return array;
   }
 }

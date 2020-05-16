@@ -31,8 +31,13 @@ by milkram
 // - play an event card (discards it)
 // - transfer card to another player
 
+
+
 ---
-// starting a new game:
+// 1. creating a new game object:
+//   const game = new Game({ players: 4, logging: true });
+
+// 2. starting a new game:
 //   game.newGame();
 //   game.startGame();
 
@@ -59,3 +64,14 @@ by milkram
 //   game.players[0].transferCardToTargetPlayer({ targetPlayerIdx: 1, cardIdx: 1 });
 //   current player:
 //   game.getCurrentPlayersTurn().transferCardToTargetPlayer({ targetPlayerIdx: 1, cardIdx: 1 });
+
+// infect: infect step
+//   game.infectCities();
+
+// infect: increase infect rate
+//   game.increaseInfectRate();
+
+
+
+// API v0.1
+game.reportPlayersCards()
