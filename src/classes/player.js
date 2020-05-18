@@ -7,6 +7,7 @@ export default class Player {
     onRemoveCardFromGame,
     onTransferCardToTargetPlayer,
     onEndTurn,
+    onGetCard,
   }) {
     this.name = name ? name : `PLAYER_${position+1}`;
     this.position = position;
@@ -17,6 +18,7 @@ export default class Player {
     this.onRemoveCardFromGame = onRemoveCardFromGame;
     this.onTransferCardToTargetPlayer = onTransferCardToTargetPlayer;
     this.onEndTurn = onEndTurn;
+    this.onGetCard = onGetCard;
   }
 
   drawCard(numberOfCards = 1) {
@@ -49,6 +51,10 @@ export default class Player {
 
   endTurn() {
     this.onEndTurn({ player: this });
+  }
+
+  get(cardName) {
+    this.onGetCard({ player: this, cardName });
   }
 
   // aliases

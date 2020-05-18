@@ -19,6 +19,7 @@
     "nodemon": "^2.0.2"
   },
   "dependencies": {
-    "colors": "^1.4.0"
+    "colors": "^1.4.0",
+    "node-emoji": "^1.10.0"
   }
 }

@@ -87,17 +87,6 @@ export default class Deck {
       }
     }
 
-    if (this.logging) {
-      for (let y = 0; y < players.length; y++) {
-        const handToString = players[y].hand.reduce((string, value, idx) => {
-          const addString = (players[y].hand.length-1) === idx ? `${value.name} (${value.color})` : `${value.name} (${value.color}), `
-          return string + addString;
-        }, '');
-        console.log(`${players[y].name} has ${handToString}`);
-      }
-      console.log('');
-    }
-
     // separate into 5 piles
     const totalPilesDesired = 5;
     const roundedDownNumberOfCardsPerPile = Math.floor(cardsSeparatedByCardType.length / totalPilesDesired);
@@ -135,9 +124,13 @@ export default class Deck {
 
       if (this.logging) {
         console.log(`** Infect the following cities with ${3-x} disease cubes: **`);
-        console.log(this.cards.discard[this.cards.discard.length - 1]);
-        console.log(this.cards.discard[this.cards.discard.length - 2]);
-        console.log(this.cards.discard[this.cards.discard.length - 3]);
+        const first = this.cards.discard[this.cards.discard.length - 1]
+        const second = this.cards.discard[this.cards.discard.length - 2]
+        const third = this.cards.discard[this.cards.discard.length - 3]
+
+        console.log(`- ` + `${first.name}`[first.color]);
+        console.log(`- ` + `${second.name}`[second.color]);
+        console.log(`- ` + `${third.name}`[third.color]);
         console.log('');
       }
     }
